@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Anxiety Journal</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0a7cff"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+<header class="app-header">
+  <h1>🧭 Anxiety Journal</h1>
+  <div class="header-actions">
+    <button id="installBtn" class="btn small" hidden>Install</button>
+    <button id="openSettings" class="btn small ghost" aria-haspopup="dialog">Settings</button>
+  </div>
+</header>
+
+<!-- Lock Screen -->
+<section id="lockScreen" class="lock-screen" aria-modal="true" role="dialog">
+  <div class="lock-card">
+    <h2 id="lockTitle">Set your PIN</h2>
+    <p id="lockSubtitle" class="muted">Create a 4‑digit PIN to protect your journal.</p>
+    <div class="pin-dots" aria-label="PIN input">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <div class="keypad" role="group" aria-label="PIN keypad">
+      <button class="key">1</button><button class="key">2</button><button class="key">3</button>
+      <button class="key">4</button><button class="key">5</button><button class="key">6</button>
+      <button class="key">7</button><button class="key">8</button><button class="key">9</button>
+      <button class="key ghost" id="clearKey">CLR</button><button class="key">0</button><button class="key ghost" id="delKey">⌫</button>
+    </div>
+    <div class="actions">
+      <button id="lockAction" class="btn" disabled>Continue</button>
+    </div>
+    <div id="lockError" class="error" role="alert" aria-live="polite"></div>
+  </div>
+</section>
+
+<main id="appMain" hidden>
+  <section id="entry-section" class="card">
+    <h2>New Entry</h2>
+    <form id="entryForm">
+      <div class="grid">
+        <label>Date
+          <input type="date" id="date" required />
+        </label>
+
+        <label>Title (short summary)
+          <input type="text" id="title" placeholder="e.g., Big client meeting" required />
+        </label>
+      </div>
+
+      <label>Your unfocused fear (what's the anxiety?)
+        <textarea id="anxiety" rows="3" placeholder="Describe the worry in plain language..." required></textarea>
+      </label>
+
+      <details open class="details">
+        <summary>Scenario Planning (Brooks: focus unfocused fear)</summary>
+        <p class="hint">List plausible scenarios, assign probabilities, and make plans.</p>
+        <div id="scenarios"></div>
+        <button type="button" class="btn ghost" id="addScenario">+ Add Scenario</button>
+      </details>
+
+      <details class="details">
+        <summary>Benefits & Opportunities (reframe)</summary>
+        <p class="hint">What upside or learning could come from this?</p>
+        <div id="benefits"></div>
+        <button type="button" class="btn ghost" id="addBenefit">+ Add Benefit</button>
+      </details>
+
+      <details class="details">
+        <summary>Evidence Check (metacognition)</summary>
+        <div class="grid">
+          <label>Evidence FOR the fear
+            <textarea id="evidenceFor" rows="2"></textarea>
+          </label>
+          <label>Evidence AGAINST the fear
+            <textarea id="evidenceAgainst" rows="2"></textarea>
+          </label>
+        </div>
+      </details>
+
+      <details class="details">
+        <summary>Approach, Don’t Avoid</summary>
+        <p class="hint">What small exposure or approach action will you take?</p>
+        <label>1 tiny action (do within 24h)
+          <input type="text" id="tinyAction" placeholder="Email to confirm expectations; 5-min prep; rehearse once..." />
+        </label>
+        <label>Schedule it
+          <input type="datetime-local" id="tinyWhen"/>
+        </label>
+      </details>
+
+      <details class="details">
+        <summary>Contemplative Reset (optional)</summary>
+        <p class="hint">Prayer, breathwork, or mantra to re-center.</p>
+        <textarea id="reset" rows="2" placeholder="Short prayer/mantra/breath plan..."></textarea>
+      </details>
+
+      <details class="details">
+        <summary>After-Action Reflection</summary>
+        <p class="hint">Complete after the event.</p>
+        <textarea id="reflection" rows="3" placeholder="What actually happened? What did you learn?"></textarea>
+      </details>
+
+      <div class="actions">
+        <button class="btn" type="submit">Save Entry</button>
+        <button class="btn ghost" type="reset">Reset</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Entries</h2>
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="Search title or text..." />
+      <select id="sortBy">
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+        <option value="prob-desc">Highest expected cost</option>
+      </select>
+      <button id="exportBtn" class="btn small">Export JSON</button>
+      <input type="file" id="importFile" accept="application/json" hidden />
+      <button id="importBtn" class="btn small ghost">Import JSON</button>
+    </div>
+    <ul id="entries" class="list"></ul>
+  </section>
+</main>
+
+<footer class="app-footer" id="appFooter" hidden>
+  <nav>
+    <a href="#" id="nav-new" class="active">New</a>
+    <a href="#" id="nav-list">Entries</a>
+    <a href="#" id="nav-help">How it works</a>
+  </nav>
+</footer>
+
+<!-- Help Modal -->
+<section id="helpModal" class="modal" hidden>
+  <div class="modal-content">
+    <h3>How to use the Anxiety Journal</h3>
+    <ol>
+      <li><strong>Name the anxiety</strong> (anxiety = unfocused fear).</li>
+      <li><strong>List scenarios</strong> and <strong>assign probabilities</strong>. Write a plan for each.</li>
+      <li><strong>Reframe</strong> with benefits/opportunities and evidence against catastrophic thinking.</li>
+      <li><strong>Choose one tiny approach action</strong> (today) and schedule it.</li>
+      <li><strong>Reflect</strong> on what actually happened and what you learned.</li>
+    </ol>
+    <p class="muted">Based on ideas discussed by Arthur C. Brooks in his Office Hours podcast and related writing.</p>
+    <button class="btn" id="closeHelp">Close</button>
+  </div>
+</section>
+
+<!-- Settings Modal -->
+<section id="settingsModal" class="modal" hidden>
+  <div class="modal-content">
+    <h3>Settings</h3>
+    <details open class="details">
+      <summary>Change PIN</summary>
+      <div class="grid">
+        <label>Current PIN
+          <input type="password" id="curPin" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="••••">
+        </label>
+        <label>New PIN
+          <input type="password" id="newPin" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="4 digits">
+        </label>
+      </div>
+      <div class="actions">
+        <button id="savePinBtn" class="btn">Update PIN</button>
+      </div>
+      <div id="pinMsg" class="muted" aria-live="polite"></div>
+    </details>
+
+    <details class="details">
+      <summary>Emergency Reset</summary>
+      <p class="hint">If you forget your PIN, you can wipe local data and set a new one. <strong>This deletes all journal entries stored on this device.</strong></p>
+      <button id="nukeBtn" class="btn ghost">Erase local data</button>
+    </details>
+
+    <div class="actions">
+      <button id="closeSettings" class="btn">Close</button>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
