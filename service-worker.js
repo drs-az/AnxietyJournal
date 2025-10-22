@@ -28,3 +28,21 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
 });
+
+self.addEventListener('message', (event) => {
+  if(event.data?.type === 'force-refresh'){
+    const respond = event.ports?.[0];
+    event.waitUntil((async () => {
+      try {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((key) => caches.delete(key)));
+        const cache = await caches.open(CACHE_NAME);
+        await cache.addAll(ASSETS);
+        respond?.postMessage({status: 'ok'});
+      } catch (err) {
+        respond?.postMessage({status: 'error', error: err?.message || 'Failed to refresh cache'});
+        throw err;
+      }
+    })());
+  }
+});
