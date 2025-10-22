@@ -29,6 +29,7 @@ input[type=text],input[type=date],input[type=datetime-local],textarea,select,inp
 .scenario .row{display:grid;gap:10px;grid-template-columns:2fr 1fr}
 .benefit{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .modal{position:fixed;inset:0;background:rgba(2,6,23,.65);display:flex;align-items:center;justify-content:center;padding:16px;z-index:30}
+.modal[hidden]{display:none!important}
 .modal-content{background:#fff;border-radius:12px;max-width:600px;width:100%;padding:16px}
 .muted{color:#64748b;font-size:.9rem}
 .error{color:#b91c1c;margin-top:8px}
