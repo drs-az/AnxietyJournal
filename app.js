@@ -50,7 +50,11 @@ function clearBuffer(){ PIN_STATE.buffer=''; pinDotsUpdate(); $('#lockError').te
 
 async function hasPin(){ return !!localStorage.getItem(PIN_KEY); }
 async function setPin(pin){ localStorage.setItem(PIN_KEY, await sha256(pin)); }
-async function verifyPin(pin){ const stored = localStorage.getItem(PIN_KEY); if(!stored) return false; return stored === await sha256(pin); }
+async function verifyPin(pin){
+  const stored = localStorage.getItem(PIN_KEY);
+  if(!stored) return false;
+  return stored === await sha256(pin);
+}
 
 async function showLock(){
   const locked = $('#lockScreen');
