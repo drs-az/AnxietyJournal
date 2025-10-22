@@ -163,6 +163,7 @@ function populateForm(entry){
   if((entry.scenarios || []).length === 0) addScenarioRow();
   document.getElementById('benefits').innerHTML = '';
   (entry.benefits || []).forEach(b => addBenefitRow(b.text));
+  if((entry.benefits || []).length === 0) addBenefitRow();
   document.querySelector('#evidenceFor').value = entry.evidenceFor || '';
   document.querySelector('#evidenceAgainst').value = entry.evidenceAgainst || '';
   document.querySelector('#tinyAction').value = entry.tinyAction || '';
@@ -212,6 +213,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   addScenarioRow();
   addBenefitRow();
 
+  document.getElementById('addScenario').addEventListener('click', ()=> addScenarioRow());
+  document.getElementById('addBenefit').addEventListener('click', ()=> addBenefitRow());
+
   // nav
   document.getElementById('nav-new').addEventListener('click', (e)=>{e.preventDefault(); startNew();});
   document.getElementById('nav-list').addEventListener('click', (e)=>{e.preventDefault(); window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});});
@@ -221,6 +225,44 @@ document.addEventListener('DOMContentLoaded', async () => {
   // settings
   document.getElementById('openSettings').addEventListener('click', ()=> $('#settingsModal').hidden = false);
   document.getElementById('closeSettings').addEventListener('click', ()=> $('#settingsModal').hidden = true);
+  const updateBtn = document.getElementById('updateBtn');
+  if(updateBtn){
+    updateBtn.addEventListener('click', async ()=>{
+      if(updateBtn.disabled) return;
+      updateBtn.disabled = true;
+      const originalLabel = updateBtn.textContent;
+      updateBtn.textContent = 'Updating…';
+      try{
+        if('serviceWorker' in navigator){
+          const reg = await navigator.serviceWorker.getRegistration();
+          if(reg?.active){
+            await reg.update().catch(()=>{});
+            const channel = new MessageChannel();
+            const waitForUpdate = new Promise((resolve, reject)=>{
+              const timeout = setTimeout(()=> reject(new Error('timeout')), 15000);
+              channel.port1.onmessage = (event)=>{
+                clearTimeout(timeout);
+                if(event.data?.status === 'ok') resolve(); else reject(new Error(event.data?.error || 'update failed'));
+              };
+              channel.port1.onmessageerror = (err)=>{
+                clearTimeout(timeout);
+                reject(err);
+              };
+            });
+            reg.active.postMessage({type:'force-refresh'}, [channel.port2]);
+            await waitForUpdate;
+          }
+        }
+        location.reload();
+      }catch(err){
+        console.error('Update failed', err);
+        alert('Update failed. Please refresh manually.');
+      }finally{
+        updateBtn.textContent = originalLabel;
+        updateBtn.disabled = false;
+      }
+    });
+  }
   document.getElementById('nukeBtn').addEventListener('click', ()=>{
     if(confirm('This will delete ALL local data for this app on this device, including your entries and PIN. Proceed?')){
       localStorage.removeItem('aj_db_v1');
